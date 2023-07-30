@@ -39,6 +39,7 @@ instructions_def = " | ".join(['"' + instr + '"i' for instr in instructions])
 
 
 definition = (
+    # fmt: off
     r"""
     %import common.NUMBER
     %import common.HEXDIGIT
@@ -59,10 +60,7 @@ definition = (
     comment: ";" SENTENCE?
     SENTENCE: /[^\n]+/
 
-    INSTR: """
-    + instructions_def
-    + r"""
-    // OPERAND: /[^,;]+/
+    INSTR: """ + instructions_def + r"""
 
     ?operand: REGISTER | (/#/? /[<>]/? expr)
     ?expr: LITERAL (OP expr)?
@@ -72,6 +70,7 @@ definition = (
     LITERAL: NUMBER | /\$/ HEXDIGIT+ | /%/ /[01]+/ | LABEL | /'.'/ | /\*/
     OP: "+" | "-" | "*" | "/"
 """
+    # fmt: on
 )
 
 grammar = Lark(definition)
