@@ -35,24 +35,27 @@ instructions_def = ' | '.join(['"' + instr + '"i' for instr in instructions])
 definition = r'''
     %import common.NUMBER
     %import common.HEXDIGIT
+    %import common.LETTER
     %import common.WORD
     %import common.WS_INLINE
 
     _WS: WS_INLINE
 
     start: line*
-    line: labeldef? _WS* statement? _WS* comment? "\n"
+    line: _WS* labeldef? _WS* statement? _WS* comment? "\n"
 
     labeldef: LABEL ":"
-    LABEL: "@"? WORD
-    statement: INSTR (_WS* OPERAND (_WS* "," _WS* OPERAND)?)?
+    LABEL: "@"? (LETTER | "_")+ (LETTER | "_" | NUMBER)*
+    statement: asm_statement | control_command
+    asm_statement: INSTR (_WS* OPERAND (_WS* "," _WS* OPERAND)?)?
+    control_command: "." WORD _WS* /[^\n]+/?
     comment: ";" SENTENCE?
     SENTENCE: /[^\n]+/
 
     INSTR: ''' + instructions_def + r'''
     OPERAND: LITERAL | IMMEDIATE | REGISTER | LABEL
 
-    LITERAL: NUMBER | "$" HEXDIGIT+
+    LITERAL: NUMBER | "$" HEXDIGIT+ | /.+/
     IMMEDIATE: "#" LITERAL
     REGISTER: "A"i | "X"i | "Y"i
 '''
@@ -77,13 +80,17 @@ def main(filename):
         for i, child in enumerate(line.children):
             if child.data == 'comment':
                 padding = (24 - len(s)) if i > 0 else 0
-                s += ' ' * padding + '; ' + child.children[0].strip()
+                s += ' ' * padding + '; ' + (child.children[0] if child.children else '').strip()
             elif child.data == 'labeldef':
                 s += child.children[0] + ':'
             elif child.data == 'statement':
-                s += ' ' * (8 - len(s)) + child.children[0]
-                if len(child.children) > 1:
-                    s += ' ' + ', '.join(child.children[1:])
+                # print(child.children[0])
+                if child.children[0].data == 'control_command':
+                    s += ' ' * (8 - len(s)) + '.' + ' '.join(child.children[0].children)
+                else:
+                    s += ' ' * (8 - len(s)) + child.children[0].children[0]
+                    if len(child.children[0].children) > 1:
+                        s += ' ' + ', '.join(child.children[0].children[1:])
         print(s)
 
 
