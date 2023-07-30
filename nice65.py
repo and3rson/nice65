@@ -88,7 +88,7 @@ def main(filename):
                 if child.children[0].data == 'control_command':
                     s += ' ' * (8 - len(s)) + '.' + ' '.join(child.children[0].children)
                 else:
-                    s += ' ' * (8 - len(s)) + child.children[0].children[0]
+                    s += ' ' * (8 - len(s)) + child.children[0].children[0].upper()
                     if len(child.children[0].children) > 1:
                         s += ' ' + ', '.join(child.children[0].children[1:])
         print(s)

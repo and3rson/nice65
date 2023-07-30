@@ -4,16 +4,16 @@ foo:.byte 1
 .code
          ;        Fill zeropage with zeroes
 fill:
-pha
-phx
+PHa
+Phx
 
-lda  #0
-ldx#0
+lDa  #0
+LdX#0
 @again: sta     $00   ,x  ;Yeah, we can use stz, but I just need some code to test nice65!
    inx
 bne fill  ; Repeat
 
-plx
+PLX
 pla
 
 rts
