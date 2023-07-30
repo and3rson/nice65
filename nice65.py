@@ -1,6 +1,7 @@
 #!/usr/bin/python3
 
 from argparse import ArgumentParser, ArgumentDefaultsHelpFormatter
+import os
 import sys
 
 from lark import Lark, Token, Transformer, Discard
@@ -11,10 +12,10 @@ from lark import Lark, Token, Transformer, Discard
 INSTRUCTIONS = [
     'adc', 'and', 'asl', 'bcc', 'bcs', 'beq', 'bit', 'bmi', 'bne', 'bpl',
     'brk', 'bvc', 'bvs', 'clc', 'cld', 'cli', 'clv', 'cmp', 'cpx', 'cpy',
-    'dec', 'dex', 'dey', 'eor', 'inc', 'inx', 'iny', 'jmp', 'jsr', 'lda',
-    'ldx', 'ldy', 'lsr', 'nop', 'ora', 'pha', 'php', 'pla', 'plp', 'rol',
-    'ror', 'rti', 'rts', 'sbc', 'sec', 'sed', 'sei', 'sta', 'stx', 'sty',
-    'tax', 'tay', 'tsx', 'txa', 'txs', 'tya'
+    'dec', 'dex', 'dey', 'eor', 'ina', 'inc', 'inx', 'iny', 'jmp', 'jsr',
+    'lda', 'ldx', 'ldy', 'lsr', 'nop', 'ora', 'pha', 'php', 'pla', 'plp',
+    'rol', 'ror', 'rti', 'rts', 'sbc', 'sec', 'sed', 'sei', 'sta', 'stx',
+    'sty', 'tax', 'tay', 'tsx', 'txa', 'txs', 'tya',
 ]
 # CMOS 65C02 Opcodes
 # https://wilsonminesco.com/NMOS-CMOSdif/
@@ -68,11 +69,26 @@ class SpaceTransformer(Transformer):
         return Discard
 
 
-def main(infile, outfile, modify_in_place):
-    grammar = Lark(definition)
+grammar = Lark(definition)
+
+
+def main(infile, outfile, modify_in_place, recursive):
+    if recursive:
+        for root, dirs, files in os.walk(infile):
+            for file in files:
+                if file.endswith('.' + recursive):
+                    path = os.path.join(root, file)
+                    print('Fixing', path)
+                    main(path, None, True, False)
+        return
+
     with open(infile, 'r') as fobj:
-        tree = grammar.parse(fobj.read())
-        # print(tree.pretty())
+        content = fobj.read()
+        if content.startswith('; nice65: ignore'):
+            print('Ignoring', infile)
+            return
+
+        tree = grammar.parse(content)
 
     if modify_in_place:
         outfile = open(infile, 'w')
@@ -122,6 +138,7 @@ if __name__ == '__main__':
     parser.add_argument('infile', help='Input file')
     group = parser.add_mutually_exclusive_group()
     group.add_argument('-o', '--outfile', metavar='outfile', help='Output file, defaults to "-" for stdout', default='-')
-    group.add_argument('-m', '--modify-in-place', help='Output file, defaults to "-" for stdout', action='store_true')
+    group.add_argument('-m', '--modify-in-place', help='Use input file as output target', action='store_true')
+    group.add_argument('-r', '--recursive', metavar='ext', help='Search subdirectories for all files by extension')
     args = parser.parse_args()
     main(**vars(args))
