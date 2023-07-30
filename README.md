@@ -6,8 +6,28 @@ Requirements:
 - Python 3.x
 - [Lark](https://github.com/lark-parser/lark)
 
-Usage:
+Features:
+- Makes ugly code less ugly
+- Fixes indentation and letter cases
+- Tested with [C64 Kernal/Basic](https://github.com/mist64/c64rom) and [my 6502-based SBC ROM code](https://github.com/and3rson/deck65)
+
+Not implemented yet:
+- Macros (basic ones might work though).
+- Proper formatting of arithmetic expressions
+- Better indentation of comments based on deduced context
+
+Example usage:
 
 ```sh
+# Reformat and print to STDOUT
 ./nice65.py example.s
+
+# Modify file in-place
+./nice65.py example.s -m
+
+# Write result to another file
+./nice65.py example.s -o clean.s
+
+# Recursively reformat all files in directory with extension ".s"
+./nice65.py ./src/ -r s
 ```
