@@ -108,7 +108,11 @@ def main(infile, outfile, modify_in_place, recursive):
                 s += ' ' * padding + ('; ' + sentence).strip()
             elif child.data == 'labeldef':
                 label = child.children[0].strip()
-                s += label + ':'
+                if label.startswith('@'):
+                    padding = ' ' * 4
+                else:
+                    padding = ''
+                s += padding + label + ':'
             elif child.data == 'statement':
                 pad_count = 8 - len(s)
                 if pad_count > 0:
