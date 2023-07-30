@@ -106,7 +106,10 @@ def main(infile, outfile, modify_in_place, recursive):
         for i, child in enumerate(line.children):
             if child.data == "comment":
                 sentence = (child.children[0] if child.children else "").strip()
-                padding = (24 - len(s)) if i > 0 else 0
+                s_len = len(s)
+                if '\n' in s:
+                    s_len = s_len - s.rfind('\n') - 1
+                padding = (24 - s_len) if i > 0 else 0
                 s += " " * padding + ("; " + sentence).strip()
             elif child.data == "labeldef":
                 label = child.children[0].strip()
