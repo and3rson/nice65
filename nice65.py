@@ -1,6 +1,7 @@
 #!/usr/bin/python3
 
-from argparse import ArgumentParser
+from argparse import ArgumentParser, ArgumentDefaultsHelpFormatter
+import sys
 
 from lark import Lark, Token, Transformer, Discard
 
@@ -46,9 +47,10 @@ definition = r'''
 
     labeldef: LABEL ":"
     LABEL: "@"? (LETTER | "_")+ (LETTER | "_" | NUMBER)*
-    statement: asm_statement | control_command
+    statement: asm_statement | control_command | constant_def
     asm_statement: INSTR (_WS* OPERAND (_WS* "," _WS* OPERAND)?)?
     control_command: "." WORD _WS* /[^\n]+/?
+    constant_def: LABEL _WS* "=" /[^\n]+/
     comment: ";" SENTENCE?
     SENTENCE: /[^\n]+/
 
@@ -66,41 +68,60 @@ class SpaceTransformer(Transformer):
         return Discard
 
 
-def main(filename):
+def main(infile, outfile, modify_in_place):
     grammar = Lark(definition)
-    with open(filename, 'r') as fobj:
+    with open(infile, 'r') as fobj:
         tree = grammar.parse(fobj.read())
         # print(tree.pretty())
 
+    if modify_in_place:
+        outfile = open(infile, 'w')
+    elif outfile == '-':
+        outfile = sys.stdout
+    else:
+        outfile = open(outfile, 'w')
+
     tree = SpaceTransformer().transform(tree)
-    # print(tree.pretty())
 
     for line in tree.children:
         s = ''
         for i, child in enumerate(line.children):
             if child.data == 'comment':
+                sentence = (child.children[0] if child.children else '').strip()
                 padding = (24 - len(s)) if i > 0 else 0
-                s += ' ' * padding + '; ' + (child.children[0] if child.children else '').strip()
+                s += ' ' * padding + ('; ' + sentence).strip()
             elif child.data == 'labeldef':
-                s += child.children[0] + ':'
+                label = child.children[0].strip()
+                s += label + ':'
             elif child.data == 'statement':
-                # print(child.children[0])
                 pad_count = 8 - len(s)
                 if pad_count > 0:
                     padding = ' ' * pad_count
                 else:
                     padding = '\n' + ' ' * 8
-                if child.children[0].data == 'control_command':
-                    s += padding + '.' + ' '.join(child.children[0].children)
+
+                statement = child.children[0]
+
+                if statement.data == 'control_command':
+                    s += padding + '.' + ' '.join(statement.children)
+                elif statement.data == 'asm_statement':
+                    s += padding + statement.children[0].upper()
+                    if len(statement.children) > 1:
+                        s += ' ' + ', '.join(statement.children[1:])
+                elif statement.data == 'constant_def':
+                    s += padding + ' = '.join(map(str.strip, statement.children))
                 else:
-                    s += padding + child.children[0].children[0].upper()
-                    if len(child.children[0].children) > 1:
-                        s += ' ' + ', '.join(child.children[0].children[1:])
-        print(s)
+                    raise NotImplementedError('Unknown statement type: ' + child.children[0].data)
+        print(s, file=outfile)
+
+    outfile.close()
 
 
 if __name__ == '__main__':
-    parser = ArgumentParser()
-    parser.add_argument('filename', help='input file')
+    parser = ArgumentParser(formatter_class=ArgumentDefaultsHelpFormatter)
+    parser.add_argument('infile', help='Input file')
+    group = parser.add_mutually_exclusive_group()
+    group.add_argument('-o', '--outfile', metavar='outfile', help='Output file, defaults to "-" for stdout', default='-')
+    group.add_argument('-m', '--modify-in-place', help='Output file, defaults to "-" for stdout', action='store_true')
     args = parser.parse_args()
     main(**vars(args))
