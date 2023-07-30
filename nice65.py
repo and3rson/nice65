@@ -85,10 +85,15 @@ def main(filename):
                 s += child.children[0] + ':'
             elif child.data == 'statement':
                 # print(child.children[0])
-                if child.children[0].data == 'control_command':
-                    s += ' ' * (8 - len(s)) + '.' + ' '.join(child.children[0].children)
+                pad_count = 8 - len(s)
+                if pad_count > 0:
+                    padding = ' ' * pad_count
                 else:
-                    s += ' ' * (8 - len(s)) + child.children[0].children[0].upper()
+                    padding = '\n' + ' ' * 8
+                if child.children[0].data == 'control_command':
+                    s += padding + '.' + ' '.join(child.children[0].children)
+                else:
+                    s += padding + child.children[0].children[0].upper()
                     if len(child.children[0].children) > 1:
                         s += ' ' + ', '.join(child.children[0].children[1:])
         print(s)
