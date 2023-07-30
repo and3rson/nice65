@@ -1,7 +1,7 @@
-         ;        Fill zeropage with zeroes
 .data
 foo:.byte 1
 .code
+         ;        Fill zeropage with zeroes
 fill:
 pha
 phx
