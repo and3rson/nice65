@@ -45,7 +45,7 @@ definition = r'''
 
     labeldef: LABEL ":"
     LABEL: "@"? WORD
-    statement: INSTR (_WS* OPERAND ("," _WS* OPERAND)?)?
+    statement: INSTR (_WS* OPERAND (_WS* "," _WS* OPERAND)?)?
     comment: ";" SENTENCE?
     SENTENCE: /[^\n]+/
 
@@ -83,7 +83,7 @@ def main(filename):
             elif child.data == 'statement':
                 s += ' ' * (8 - len(s)) + child.children[0]
                 if len(child.children) > 1:
-                    s += ' ' + ', '.join([child.children[1]])
+                    s += ' ' + ', '.join(child.children[1:])
         print(s)
 
 
