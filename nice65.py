@@ -74,12 +74,6 @@ definition = (
 """
 )
 
-
-class SpaceTransformer(Transformer):
-    def WS(self, tok: Token):
-        return Discard
-
-
 grammar = Lark(definition)
 
 
@@ -107,8 +101,6 @@ def main(infile, outfile, modify_in_place, recursive):
         outfile = sys.stdout
     else:
         outfile = open(outfile, "w")
-
-    # tree = SpaceTransformer().transform(tree)
 
     for line in tree.children:
         s = ""
