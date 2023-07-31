@@ -46,13 +46,13 @@ Here's an example on how to have nice65 configured as code formatter for NeoVim 
     ```lua
     local null_ls = require("null-ls")
     null_ls.setup({
-        on_attach = on_attach,  -- Use your on_attach function here if have one, otherwise skip this
+        on_attach = on_attach, -- Use your on_attach here if have one, otherwise remove this
     })
     null_ls.register({
         method = null_ls.methods.FORMATTING,
         filetypes = { 'asm_ca65' },
         generator = null_ls.formatter({
-            command = '/path/to/nice65.py',  -- point at nice65.py in your filesystem
+            command = '/path/to/nice65.py', -- point at nice65.py in your filesystem
             args = {'-'},
             to_stdin = true,
             from_stdout = true,
