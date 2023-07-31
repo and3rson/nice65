@@ -8,7 +8,8 @@ Requirements:
 
 Features:
 - Makes ugly code less ugly
-- Fixes indentation and letter cases
+- Fixes indentation and letter cases (mnemonics, registers)
+- Understands colon-less labels
 - Tested with [C64 Kernal/Basic](https://github.com/mist64/c64rom) and [my 6502-based SBC ROM code](https://github.com/and3rson/deck65)
 
 Not implemented yet:
