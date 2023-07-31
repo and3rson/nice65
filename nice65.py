@@ -87,13 +87,16 @@ def main(infile, outfile, modify_in_place, recursive):
                     main(path, None, True, False)
         return
 
-    with open(infile, "r") as fobj:
-        content = fobj.read()
-        if content.startswith("; nice65: ignore"):
-            print("Ignoring", infile)
-            return
+    if infile == "-":
+        content = sys.stdin.read()
+    else:
+        with open(infile, "r") as fobj:
+            content = fobj.read()
+            if content.startswith("; nice65: ignore"):
+                print("Ignoring", infile)
+                return
 
-        tree = grammar.parse(content)
+    tree = grammar.parse(content)
 
     if modify_in_place:
         outfile = open(infile, "w")
@@ -106,7 +109,11 @@ def main(infile, outfile, modify_in_place, recursive):
         s = ""
         for i, child in enumerate(line.children):
             if child.data == "comment":
-                sentence = (child.children[0] if child.children else "").strip()
+                sentence = (
+                    child.children[0]
+                    if child.children
+                    else ""
+                ).strip()
                 s_len = len(s)
                 if '\n' in s:
                     s_len = s_len - s.rfind('\n') - 1
@@ -140,7 +147,8 @@ def main(infile, outfile, modify_in_place, recursive):
                             args.append(flatten_expr(operand))
                         s += " " + ", ".join(args)
                 elif statement.data == "constant_def":
-                    s += padding + " = ".join(map(str.strip, statement.children))
+                    s += padding + \
+                        " = ".join(map(str.strip, statement.children))
                 else:
                     raise NotImplementedError(
                         "Unknown statement type: " + child.children[0].data
@@ -165,7 +173,9 @@ def flatten_expr(operand):
 
 if __name__ == "__main__":
     parser = ArgumentParser(formatter_class=ArgumentDefaultsHelpFormatter)
-    parser.add_argument("infile", help="Input file")
+    parser.add_argument(
+        "infile", help='Input file, pass "-" to read from for stdin'
+    )
     group = parser.add_mutually_exclusive_group()
     group.add_argument(
         "-o",

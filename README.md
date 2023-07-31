@@ -17,7 +17,7 @@ Not implemented yet:
 - Proper formatting of arithmetic expressions
 - Better indentation of comments based on deduced context
 
-Example usage:
+## Example usage
 
 ```sh
 # Reformat and print to STDOUT
@@ -32,3 +32,30 @@ Example usage:
 # Recursively reformat all files in directory with extension ".s"
 ./nice65.py ./src/ -r s
 ```
+
+## Using with NeoVim
+
+Here's an example on how to have nice65 configured as code formatter for NeoVim with null-ls
+
+1. Make sure you have the following neovim plugins installed:
+    - `maxbane/vim-asm_ca65` - sets filetype for CA65 buffers
+    - `jose-elias-alvarez/null-ls.nvim` - allows to run custom scripts as language servers
+
+2. Add configuration:
+
+    ```lua
+    local null_ls = require("null-ls")
+    null_ls.setup({
+        on_attach = on_attach,
+    })
+    null_ls.register({
+        method = null_ls.methods.FORMATTING,
+        filetypes = { 'asm_ca65' },
+        generator = null_ls.formatter({
+            command = '/path/to/nice65.py',
+            args = {'-'},
+            to_stdin = true,
+            from_stdout = true,
+        }),
+    })
+    ```
