@@ -46,7 +46,7 @@ Here's an example on how to have nice65 configured as code formatter for NeoVim 
     ```lua
     local null_ls = require("null-ls")
     null_ls.setup({
-        on_attach = on_attach, -- Use your on_attach here if you have one, otherwise remove this
+        on_attach = on_attach, -- Remove this line if you don't use on_attach
     })
     null_ls.register({
         method = null_ls.methods.FORMATTING,
