@@ -21,16 +21,16 @@ Not implemented yet:
 
 ```sh
 # Reformat and print to STDOUT
-./nice65.py example.s
+./nice65.py samples/example.s
 
 # Modify file in-place
-./nice65.py example.s -m
+./nice65.py samples/example.s -m
 
 # Write result to another file
-./nice65.py example.s -o clean.s
+./nice65.py samples/example.s -o samples/clean.s
 
 # Recursively reformat all files in directory with extension ".s"
-./nice65.py ./src/ -r s
+./nice65.py ./samples/ -r s
 ```
 
 ## Using with NeoVim
