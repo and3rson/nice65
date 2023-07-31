@@ -13,8 +13,11 @@ LdX #0
    inx
 bne fill  ; Repeat
 
-    ; Do unnecessary throwaway stuff to test expressions
-    lda #<($42  +  %10101010- (foo*2))
+; Do unnecessary throwaway stuff to test expressions
+lda #<($42  +  %10101010- (foo*2))
+cmp A
+lda ($1234), X
+
 @ridiculously_long_label_just_for_the_sake_of_it:PLX
 pla
 

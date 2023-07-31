@@ -152,7 +152,10 @@ def main(infile, outfile, modify_in_place, recursive):
 def flatten_expr(operand):
     parts = []
     if isinstance(operand, Token):
-        parts.append(str(operand))
+        s = str(operand)
+        if operand.type == 'REGISTER':
+            s = s.upper()
+        parts.append(s)
     else:
         for child in operand.children:
             parts.extend(flatten_expr(child))
