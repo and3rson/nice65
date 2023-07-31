@@ -52,22 +52,23 @@ definition = (
     line: (labeldef statement | statement | labeldef)? comment? "\n"
 
     labeldef: LABEL ":"?
-    LABEL: "@"? (LETTER | "_")+ (LETTER | "_" | NUMBER)*
+
     statement: asm_statement | control_command | constant_def
     asm_statement: INSTR (_WS+ operand ("," operand)?)?
     control_command: "." WORD (_WS+ /[^\n]+/)?
     constant_def: LABEL "=" /[^\n]+/
-    comment: ";" SENTENCE?
-    SENTENCE: /[^\n]+/
 
-    INSTR: """ + instructions_def + r"""
+    comment: ";" SENTENCE?
 
     ?operand: REGISTER | (/#/? /[<>]/? expr)
     ?expr: LITERAL (OP expr)?
         | /\(/ expr /\)/ -> expr
 
+    SENTENCE: /[^\n]+/
+    INSTR: """ + instructions_def + r"""
     REGISTER: "A"i | "X"i | "Y"i
     LITERAL: NUMBER | /\$/ HEXDIGIT+ | /%/ /[01]+/ | LABEL | /'.'/ | /\*/
+    LABEL: "@"? (LETTER | "_")+ (LETTER | "_" | NUMBER)*
     OP: "+" | "-" | "*" | "/"
 """
     # fmt: on
