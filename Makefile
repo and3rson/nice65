@@ -1,6 +1,6 @@
 .PHONY: test
 test:
-	./nice65.py ./samples/example.s | diff - ./samples/clean.s
+	python -m nice65 ./samples/example.s | diff - ./samples/clean.s
 
 .PHONY: build
 build:

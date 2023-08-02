@@ -28,21 +28,21 @@ pip install nice65
 
 ```sh
 # Reformat and print to STDOUT
-./nice65.py samples/example.s
+nice65 samples/example.s
 
 # Modify file in-place
-./nice65.py samples/example.s -m
+nice65 samples/example.s -m
 
 # Write result to another file
-./nice65.py samples/example.s -o samples/clean.s
+nice65 samples/example.s -o samples/clean.s
 # or
-./nice65.py samples/example.s > samples/clean.s
+nice65 samples/example.s > samples/clean.s
 
 # Recursively reformat all files in directory with extension ".s"
-./nice65.py ./samples/ -r
+nice65 ./samples/ -r
 
 # Recursively reformat all files in directory with extension ".asm"
-./nice65.py ./samples/ -r -p '*.asm'
+nice65 ./samples/ -r -p '*.asm'
 ```
 
 Before:
@@ -122,7 +122,7 @@ Here's an example on how to have nice65 configured as code formatter for NeoVim 
         method = null_ls.methods.FORMATTING,
         filetypes = { 'asm_ca65' },
         generator = null_ls.formatter({
-            command = '/path/to/nice65.py', -- point at nice65.py in your filesystem
+            command = 'nice65',
             args = {'-'},
             to_stdin = true,
             from_stdout = true,
