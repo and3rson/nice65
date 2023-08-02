@@ -134,7 +134,7 @@ def main(infile, outfile, modify_in_place, recursive):
                     # Named label definition
                     label = child.children[0].strip()
                 else:
-                    # Anonymous label
+                    # Unnamed label
                     label = ''
 
                 if label.startswith("@") or not label:
