@@ -18,6 +18,12 @@ Not implemented yet:
 - Proper formatting of arithmetic expressions
 - Better indentation of comments based on deduced context
 
+# Installation
+
+```sh
+pip install nice65
+```
+
 ## Example usage
 
 ```sh
