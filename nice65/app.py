@@ -108,7 +108,7 @@ def main():
     parser.add_argument(
         "-p",
         "--pattern",
-        help="Match file names by Unix shell-style wildcard when used with -r, defaults to '*'",
+        help="Match file names by Unix shell-style wildcard when used with -r",
         default='*.s',
     )
     args = parser.parse_args()
