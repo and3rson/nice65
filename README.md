@@ -29,9 +29,14 @@ Not implemented yet:
 
 # Write result to another file
 ./nice65.py samples/example.s -o samples/clean.s
+# or
+./nice65.py samples/example.s > samples/clean.s
 
 # Recursively reformat all files in directory with extension ".s"
-./nice65.py ./samples/ -r s
+./nice65.py ./samples/ -r
+
+# Recursively reformat all files in directory with extension ".asm"
+./nice65.py ./samples/ -r -p '*.asm'
 ```
 
 Before:

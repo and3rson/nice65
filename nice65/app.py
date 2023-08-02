@@ -1,6 +1,7 @@
 #!/usr/bin/python3
 
 from argparse import ArgumentParser, ArgumentDefaultsHelpFormatter
+import fnmatch
 import os
 import re
 import sys
@@ -79,16 +80,51 @@ definition = (
 grammar = Lark(definition)
 
 
-def main(infile, outfile, modify_in_place, recursive):
-    if recursive:
-        for root, dirs, files in os.walk(infile):
-            for file in files:
-                if file.endswith("." + recursive):
-                    path = os.path.join(root, file)
-                    print("Fixing", path)
-                    main(path, None, True, False)
-        return
+def main():
+    parser = ArgumentParser(formatter_class=ArgumentDefaultsHelpFormatter)
+    parser.add_argument(
+        "infile", help='Input file, pass "-" to read from for stdin'
+    )
+    group = parser.add_mutually_exclusive_group()
+    group.add_argument(
+        "-o",
+        "--outfile",
+        metavar="outfile",
+        help='Output file, defaults to "-" for stdout',
+        default="-",
+    )
+    group.add_argument(
+        "-m",
+        "--modify-in-place",
+        help="Use input file as output target",
+        action="store_true",
+    )
+    group.add_argument(
+        "-r",
+        "--recursive",
+        help="Recursively fix all files",
+        action="store_true",
+    )
+    parser.add_argument(
+        "-p",
+        "--pattern",
+        help="Match file names by Unix shell-style wildcard when used with -r, defaults to '*'",
+        default='*.s',
+    )
+    args = parser.parse_args()
 
+    if args.recursive:
+        for root, _, files in os.walk(args.infile):
+            for file in files:
+                if fnmatch.fnmatch(file, args.pattern):
+                    path = os.path.join(root, file)
+                    print("Fixing", path, file=sys.stderr)
+                    fix(path, None, True)
+    else:
+        fix(args.infile, args.outfile, args.modify_in_place)
+
+
+def fix(infile, outfile, modify_in_place):
     if infile == "-":
         content = sys.stdin.read()
     else:
@@ -116,19 +152,17 @@ def main(infile, outfile, modify_in_place, recursive):
         outfile = open(outfile, "w")
 
     for line in tree.children:
-        s = ""
+        string = ""
         for i, child in enumerate(line.children):
             if child.data == "comment":
                 sentence = (
-                    child.children[0]
-                    if child.children
-                    else ""
+                    child.children[0] if child.children else ""
                 ).strip()
-                s_len = len(s)
-                if '\n' in s:
-                    s_len = s_len - s.rfind('\n') - 1
+                s_len = len(string)
+                if '\n' in string:
+                    s_len = s_len - string.rfind('\n') - 1
                 padding = (24 - s_len) if i > 0 else 0
-                s += " " * padding + ("; " + sentence).strip()
+                string += " " * padding + ("; " + sentence).strip()
             elif child.data == "labeldef":
                 if child.children:
                     # Named label definition
@@ -141,9 +175,9 @@ def main(infile, outfile, modify_in_place, recursive):
                     padding = " " * 4
                 else:
                     padding = ""
-                s += padding + label + ":"
+                string += padding + label + ":"
             elif child.data == "statement":
-                pad_count = 8 - len(s)
+                pad_count = 8 - len(string)
                 if pad_count > 0:
                     padding = " " * pad_count
                 else:
@@ -152,24 +186,24 @@ def main(infile, outfile, modify_in_place, recursive):
                 statement = child.children[0]
 
                 if statement.data == "control_command":
-                    s += padding + "." + " ".join(statement.children)
+                    string += padding + "." + " ".join(statement.children)
                 elif statement.data == "asm_statement":
                     mnemonic = statement.children[0]
-                    s += padding + mnemonic.upper()
+                    string += padding + mnemonic.upper()
                     operands = statement.children[1:]
                     if operands:
                         args = []
                         for operand in operands:
                             args.append(flatten_expr(operand))
-                        s += " " + ", ".join(args)
+                        string += " " + ", ".join(args)
                 elif statement.data == "constant_def":
-                    s += padding + \
+                    string += padding + \
                         " = ".join(map(str.strip, statement.children))
                 else:
                     raise NotImplementedError(
                         "Unknown statement type: " + child.children[0].data
                     )
-        print(s, file=outfile)
+        print(string, file=outfile)
 
     outfile.close()
 
@@ -177,10 +211,10 @@ def main(infile, outfile, modify_in_place, recursive):
 def flatten_expr(operand):
     parts = []
     if isinstance(operand, Token):
-        s = str(operand)
+        string = str(operand)
         if operand.type == 'REGISTER':
-            s = s.upper()
-        parts.append(s)
+            string = string.upper()
+        parts.append(string)
     else:
         for child in operand.children:
             parts.extend(flatten_expr(child))
@@ -188,29 +222,4 @@ def flatten_expr(operand):
 
 
 if __name__ == "__main__":
-    parser = ArgumentParser(formatter_class=ArgumentDefaultsHelpFormatter)
-    parser.add_argument(
-        "infile", help='Input file, pass "-" to read from for stdin'
-    )
-    group = parser.add_mutually_exclusive_group()
-    group.add_argument(
-        "-o",
-        "--outfile",
-        metavar="outfile",
-        help='Output file, defaults to "-" for stdout',
-        default="-",
-    )
-    group.add_argument(
-        "-m",
-        "--modify-in-place",
-        help="Use input file as output target",
-        action="store_true",
-    )
-    group.add_argument(
-        "-r",
-        "--recursive",
-        metavar="ext",
-        help="Search subdirectories for all files by extension",
-    )
-    args = parser.parse_args()
-    main(**vars(args))
+    main()
