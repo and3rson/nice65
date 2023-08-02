@@ -2,6 +2,7 @@
 
 from argparse import ArgumentParser, ArgumentDefaultsHelpFormatter
 import os
+import re
 import sys
 
 from lark import Lark, Token, Transformer, Discard
@@ -51,7 +52,7 @@ definition = (
     start: line*
     line: (labeldef statement | statement | labeldef)? comment? "\n"
 
-    labeldef: LABEL ":"?
+    labeldef: LABEL ":"? | ":"
 
     statement: asm_statement | control_command | constant_def
     asm_statement: INSTR (_WS+ operand ("," operand)?)?
@@ -67,9 +68,10 @@ definition = (
     SENTENCE: /[^\n]+/
     INSTR: """ + instructions_def + r"""
     REGISTER: "A"i | "X"i | "Y"i
-    LITERAL: NUMBER | /\$/ HEXDIGIT+ | /%/ /[01]+/ | LABEL | /'.'/ | /\*/
+    LITERAL: NUMBER | /\$/ HEXDIGIT+ | /%/ /[01]+/ | LABEL | LABEL_REL | /'.'/ | /\*/
     LABEL: "@"? (LETTER | "_")+ (LETTER | "_" | NUMBER)*
-    OP: "+" | "-" | "*" | "/"
+    LABEL_REL: /:[\+\-]+/
+    OP: "+" | "-" | "*" | "/" | "|" | "^" | "&"
 """
     # fmt: on
 )
@@ -92,9 +94,17 @@ def main(infile, outfile, modify_in_place, recursive):
     else:
         with open(infile, "r") as fobj:
             content = fobj.read()
-            if content.startswith("; nice65: ignore"):
-                print("Ignoring", infile)
-                return
+            options_match = re.findall(
+                r'^[ \t]*;\s*nice65:([^\n]+)$', content, re.MULTILINE
+            )
+            if options_match:
+                options_str = options_match[0].lower().replace(',', ' ')
+                options = set(
+                    filter(None, map(str.strip, options_str.split(' ')))
+                )
+                if 'ignore' in options:
+                    print("Ignoring", infile)
+                    return
 
     tree = grammar.parse(content)
 
@@ -120,8 +130,14 @@ def main(infile, outfile, modify_in_place, recursive):
                 padding = (24 - s_len) if i > 0 else 0
                 s += " " * padding + ("; " + sentence).strip()
             elif child.data == "labeldef":
-                label = child.children[0].strip()
-                if label.startswith("@"):
+                if child.children:
+                    # Named label definition
+                    label = child.children[0].strip()
+                else:
+                    # Anonymous label
+                    label = ''
+
+                if label.startswith("@") or not label:
                     padding = " " * 4
                 else:
                     padding = ""
