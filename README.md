@@ -63,7 +63,7 @@ rts
 ```
 
 After:
-```
+```asm
         .data
 foo:    .byte 1
 
