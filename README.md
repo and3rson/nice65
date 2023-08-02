@@ -34,6 +34,64 @@ Not implemented yet:
 ./nice65.py ./samples/ -r s
 ```
 
+Before:
+```asm
+.data
+foo:.byte 1
+
+.code
+         ;        Fill zeropage with zeroes
+fill:
+PHa
+Phx
+
+lDa  #0
+LdX #0
+@again: sta     $00   ,x  ;Yeah, we can use stz, but I just need some code to test nice65!
+   inx
+bne fill  ; Repeat
+
+; Do unnecessary throwaway stuff to test expressions
+lda #<($42  +  %10101010- (foo*2))
+cmp A
+lda ($1234), X
+
+@ridiculously_long_label_just_for_the_sake_of_it:PLX
+pla
+
+rts
+```
+
+After:
+```
+        .data
+foo:    .byte 1
+
+        .code
+; Fill zeropage with zeroes
+fill:
+        PHA
+        PHX
+
+        LDA #0
+        LDX #0
+    @again:
+        STA $00, X      ; Yeah, we can use stz, but I just need some code to test nice65!
+        INX
+        BNE fill        ; Repeat
+
+; Do unnecessary throwaway stuff to test expressions
+        LDA #<($42+%10101010-(foo*2))
+        CMP A
+        LDA ($1234), X
+
+    @ridiculously_long_label_just_for_the_sake_of_it:
+        PLX
+        PLA
+
+        RTS
+```
+
 ## Using with NeoVim
 
 Here's an example on how to have nice65 configured as code formatter for NeoVim with null-ls
