@@ -1,7 +1,8 @@
 #!/usr/bin/python3
 
-from argparse import ArgumentParser, ArgumentDefaultsHelpFormatter
+from argparse import ArgumentParser, ArgumentDefaultsHelpFormatter, Action
 import fnmatch
+
 try:
     import importlib_metadata as metadata
 except ImportError:
@@ -120,14 +121,11 @@ def main():
     parser.add_argument(
         "-v",
         "--version",
-        help="Print version",
-        action="store_true",
+        help="Show version",
+        nargs=0,
+        action=Version,
     )
     args = parser.parse_args()
-
-    if args.version:
-        print('nice65 version', metadata.version("nice65"), file=sys.stderr)
-        return
 
     if args.recursive:
         for root, _, files in os.walk(args.infile):
@@ -138,6 +136,12 @@ def main():
                     fix(path, None, True)
     else:
         fix(args.infile, args.outfile, args.modify_in_place)
+
+
+class Version(Action):
+    def __call__(self, parser, namespace, values, option_string):
+        print('nice65 version', metadata.version("nice65"), file=sys.stderr)
+        parser.exit()
 
 
 def fix(infile, outfile, modify_in_place):
