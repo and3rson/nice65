@@ -28,4 +28,4 @@ jmp :+
 @ridiculously_long_label_just_for_the_sake_of_it:PLX
 pla
 
-rts
+end:rts
