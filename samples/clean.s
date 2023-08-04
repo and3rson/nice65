@@ -23,7 +23,8 @@ fill:
 ; Do unnecessary throwaway stuff to test expressions
         LDA #<($42+%10101010-(foo*2))
         CMP foo+2
-        LDA $1234
+        JMP :+
+    :   LDA $1234
 
     @ridiculously_long_label_just_for_the_sake_of_it:
         PLX
