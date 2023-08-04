@@ -35,6 +35,8 @@ CMOS_INSTRUCTIONS = [
     # fmt: on
 ]
 
+COL1_COMMANDS = {'segment', 'zeropage', 'data', 'code', 'bss'}
+
 instructions = INSTRUCTIONS + CMOS_INSTRUCTIONS
 
 instructions_def = " | ".join(['"' + instr + '"i' for instr in instructions])
@@ -181,12 +183,18 @@ def fix(infile, outfile, modify_in_place):
 
                 if statement.data == "control_command":
                     name = statement.children[0].strip()
-                    string += padding + "." + name.upper() + " " + " ".join(statement.children[1:])
+                    string += (
+                        (padding if name not in COL1_COMMANDS else '')
+                        + "."
+                        + name.lower()
+                        + " "
+                        + " ".join(statement.children[1:])
+                    )
                 elif statement.data == "macro_start":
                     name = statement.children[0].strip()
-                    string += padding + ".MACRO " + name + " " + ", ".join(map(str.strip, statement.children[1:]))
+                    string += ".macro ".ljust(8, ' ') + name + " " + ", ".join(map(str.strip, statement.children[1:]))
                 elif statement.data == "macro_end":
-                    string += padding + ".ENDMACRO"
+                    string += ".endmacro"
                 elif statement.data == "asm_statement":
                     mnemonic = statement.children[0]
                     string += padding + mnemonic.upper()

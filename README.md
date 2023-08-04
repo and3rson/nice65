@@ -10,11 +10,12 @@ Features:
 - Makes ugly code less ugly
 - Fixes indentation and letter cases (mnemonics, registers)
 - Understands weird labels, such as colon-less (C64 style) and unnamed (`:`, `:+++`)
+- Support for basic macros
 - Skip files with `; nice65: ignore` comment
 - Tested with [C64 Kernal/Basic](https://github.com/mist64/c64rom) and [my 6502-based SBC ROM code](https://github.com/and3rson/deck65)
 
 Not implemented yet:
-- Macros (basic ones work though).
+- Complex macros
 - Proper formatting of arithmetic expressions
 - Better indentation of comments based on deduced context
 
@@ -81,16 +82,16 @@ rts
 
 After:
 ```asm
-        .MACRO foobar aa, bb, cc
+.macro  foobar aa, bb, cc
         LDA aa
         LDX bb
         LDY cc
-        .ENDMACRO
+.endmacro
 
-        .DATA
-foo:    .BYTE 1
+.data
+foo:    .byte 1
 
-        .CODE
+.code
 ; Fill zeropage with zeroes
 fill:
         PHA

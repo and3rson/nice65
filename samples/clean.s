@@ -1,13 +1,13 @@
-        .MACRO foobar aa, bb, cc
+.macro  foobar aa, bb, cc
         LDA aa
         LDX bb
         LDY cc
-        .ENDMACRO
+.endmacro
 
-        .DATA
-foo:    .BYTE 1
+.data
+foo:    .byte 1
 
-        .CODE
+.code
 ; Fill zeropage with zeroes
 fill:
         PHA
