@@ -2,7 +2,10 @@
 
 from argparse import ArgumentParser, ArgumentDefaultsHelpFormatter
 import fnmatch
-import importlib_metadata
+try:
+    import importlib_metadata as metadata
+except ImportError:
+    from importlib import metadata
 import os
 import re
 import sys
@@ -123,7 +126,7 @@ def main():
     args = parser.parse_args()
 
     if args.version:
-        print('nice65 version', importlib_metadata.version("nice65"), file=sys.stderr)
+        print('nice65 version', metadata.version("nice65"), file=sys.stderr)
         return
 
     if args.recursive:
