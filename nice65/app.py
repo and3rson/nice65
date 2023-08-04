@@ -2,6 +2,7 @@
 
 from argparse import ArgumentParser, ArgumentDefaultsHelpFormatter
 import fnmatch
+import importlib_metadata
 import os
 import re
 import sys
@@ -113,7 +114,17 @@ def main():
         help="Match file names by Unix shell-style wildcard when used with -r",
         default='*.s',
     )
+    parser.add_argument(
+        "-v",
+        "--version",
+        help="Print version",
+        action="store_true",
+    )
     args = parser.parse_args()
+
+    if args.version:
+        print('nice65 version', importlib_metadata.version("nice65"), file=sys.stderr)
+        return
 
     if args.recursive:
         for root, _, files in os.walk(args.infile):
