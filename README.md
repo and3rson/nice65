@@ -116,9 +116,16 @@ fill:
         RTS
 ```
 
+
+## Using with Vim
+
+```vim
+:nnoremap <M-r> :%! nice65 -<CR>
+```
+
 ## Using with NeoVim
 
-Here's an example on how to have nice65 configured as code formatter for NeoVim with null-ls
+If you want to be fancy, here's an example on how to have nice65 configured as code formatter for NeoVim with null-ls:
 
 1. Make sure you have the following neovim plugins installed:
     - `maxbane/vim-asm_ca65` - sets filetype for CA65 buffers
