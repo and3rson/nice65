@@ -55,8 +55,10 @@ definition = (
 
     labeldef: LABEL ":"? | ":"
 
-    statement: asm_statement | control_command | constant_def
+    statement: asm_statement | macro_start | macro_end | control_command | constant_def
     asm_statement: INSTR (_WS+ operand ("," operand)?)?
+    macro_start: ".macro" WORD (_WS+ WORD ("," WORD)*)?
+    macro_end: ".endmacro"
     control_command: "." WORD (_WS+ /[^\n]+/)?
     constant_def: LABEL "=" /[^\n]+/
 
@@ -82,9 +84,7 @@ grammar = Lark(definition)
 
 def main():
     parser = ArgumentParser(formatter_class=ArgumentDefaultsHelpFormatter)
-    parser.add_argument(
-        "infile", help='Input file, pass "-" to read from for stdin'
-    )
+    parser.add_argument("infile", help='Input file, pass "-" to read from for stdin')
     group = parser.add_mutually_exclusive_group()
     group.add_argument(
         "-o",
@@ -130,14 +130,10 @@ def fix(infile, outfile, modify_in_place):
     else:
         with open(infile, "r") as fobj:
             content = fobj.read()
-            options_match = re.findall(
-                r'^[ \t]*;\s*nice65:([^\n]+)$', content, re.MULTILINE
-            )
+            options_match = re.findall(r'^[ \t]*;\s*nice65:([^\n]+)$', content, re.MULTILINE)
             if options_match:
                 options_str = options_match[0].lower().replace(',', ' ')
-                options = set(
-                    filter(None, map(str.strip, options_str.split(' ')))
-                )
+                options = set(filter(None, map(str.strip, options_str.split(' '))))
                 if 'ignore' in options:
                     print("Ignoring", infile)
                     return
@@ -155,9 +151,7 @@ def fix(infile, outfile, modify_in_place):
         string = ""
         for i, child in enumerate(line.children):
             if child.data == "comment":
-                sentence = (
-                    child.children[0] if child.children else ""
-                ).strip()
+                sentence = (child.children[0] if child.children else "").strip()
                 s_len = len(string)
                 if '\n' in string:
                     s_len = s_len - string.rfind('\n') - 1
@@ -186,7 +180,13 @@ def fix(infile, outfile, modify_in_place):
                 statement = child.children[0]
 
                 if statement.data == "control_command":
-                    string += padding + "." + " ".join(statement.children)
+                    name = statement.children[0].strip()
+                    string += padding + "." + name.upper() + " " + " ".join(statement.children[1:])
+                elif statement.data == "macro_start":
+                    name = statement.children[0].strip()
+                    string += padding + ".MACRO " + name + " " + ", ".join(map(str.strip, statement.children[1:]))
+                elif statement.data == "macro_end":
+                    string += padding + ".ENDMACRO"
                 elif statement.data == "asm_statement":
                     mnemonic = statement.children[0]
                     string += padding + mnemonic.upper()
@@ -197,13 +197,10 @@ def fix(infile, outfile, modify_in_place):
                             args.append(flatten_expr(operand))
                         string += " " + ", ".join(args)
                 elif statement.data == "constant_def":
-                    string += padding + \
-                        " = ".join(map(str.strip, statement.children))
+                    string += padding + " = ".join(map(str.strip, statement.children))
                 else:
-                    raise NotImplementedError(
-                        "Unknown statement type: " + child.children[0].data
-                    )
-        print(string, file=outfile)
+                    raise NotImplementedError("Unknown statement type: " + child.children[0].data)
+        print(string.rstrip(), file=outfile)
 
     outfile.close()
 

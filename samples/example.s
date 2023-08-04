@@ -1,3 +1,9 @@
+.macro foobar aa, bb, cc
+lda aa
+ldx bb
+ldy cc
+.endmacro
+
 .data
 foo:.byte 1
 
@@ -15,8 +21,8 @@ bne fill  ; Repeat
 
 ; Do unnecessary throwaway stuff to test expressions
 lda #<($42  +  %10101010- (foo*2))
-cmp A
-lda ($1234), X
+cmp foo+2
+lda $1234
 
 @ridiculously_long_label_just_for_the_sake_of_it:PLX
 pla

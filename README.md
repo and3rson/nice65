@@ -14,7 +14,7 @@ Features:
 - Tested with [C64 Kernal/Basic](https://github.com/mist64/c64rom) and [my 6502-based SBC ROM code](https://github.com/and3rson/deck65)
 
 Not implemented yet:
-- Macros (basic ones might work though).
+- Macros (basic ones work though).
 - Proper formatting of arithmetic expressions
 - Better indentation of comments based on deduced context
 
@@ -47,6 +47,12 @@ nice65 ./samples/ -r -p '*.asm'
 
 Before:
 ```asm
+.macro foobar aa, bb, cc
+lda aa
+ldx bb
+ldy cc
+.endmacro
+
 .data
 foo:.byte 1
 
@@ -64,8 +70,8 @@ bne fill  ; Repeat
 
 ; Do unnecessary throwaway stuff to test expressions
 lda #<($42  +  %10101010- (foo*2))
-cmp A
-lda ($1234), X
+cmp foo+2
+lda $1234
 
 @ridiculously_long_label_just_for_the_sake_of_it:PLX
 pla
@@ -75,10 +81,16 @@ rts
 
 After:
 ```asm
-        .data
-foo:    .byte 1
+        .MACRO foobar aa, bb, cc
+        LDA aa
+        LDX bb
+        LDY cc
+        .ENDMACRO
 
-        .code
+        .DATA
+foo:    .BYTE 1
+
+        .CODE
 ; Fill zeropage with zeroes
 fill:
         PHA
@@ -93,8 +105,8 @@ fill:
 
 ; Do unnecessary throwaway stuff to test expressions
         LDA #<($42+%10101010-(foo*2))
-        CMP A
-        LDA ($1234), X
+        CMP foo+2
+        LDA $1234
 
     @ridiculously_long_label_just_for_the_sake_of_it:
         PLX
