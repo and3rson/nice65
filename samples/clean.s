@@ -13,7 +13,7 @@ fill:
         PHA
         PHX
 
-        LDA #0
+start:  LDA #0
         LDX #0
     @again:
         STA $00, X      ; Yeah, we can use stz, but I just need some code to test nice65!

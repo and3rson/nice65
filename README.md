@@ -63,7 +63,7 @@ fill:
 PHa
 Phx
 
-lDa  #0
+start lDa  #0
 LdX #0
 @again: sta     $00   ,x  ;Yeah, we can use stz, but I just need some code to test nice65!
    inx
@@ -78,7 +78,7 @@ jmp :+
 @ridiculously_long_label_just_for_the_sake_of_it:PLX
 pla
 
-rts
+end:rts
 ```
 
 After:
@@ -98,7 +98,7 @@ fill:
         PHA
         PHX
 
-        LDA #0
+start:  LDA #0
         LDX #0
     @again:
         STA $00, X      ; Yeah, we can use stz, but I just need some code to test nice65!
@@ -115,7 +115,7 @@ fill:
         PLX
         PLA
 
-        RTS
+end:    RTS
 ```
 
 
