@@ -15,11 +15,8 @@ foo:    .byte 1
 .code
 ; Fill zeropage with zeroes
 fill:
-        PHA
-        PHX
-
-start:  pushall
-        ldax #0, #0
+        pushall
+start:  ldax #0, #0
     @again:
         STA $00, X      ; Yeah, we can use stz, but I just need some code to test nice65!
         INX

@@ -4,9 +4,9 @@ ldx bb ; load bb
 .endmacro
 
 .macro pushall
-    pha
-    phx
-    phy
+    phA
+    phX
+    PHy
 .endmacro
 
 .data
@@ -15,11 +15,8 @@ foo:.byte 1
 .code
          ;        Fill zeropage with zeroes
 fill:
-PHa
-Phx
-
-start: pushall
-ldax #0, #0
+pushall
+start: ldax #0, #0
 @again: sta     $00   ,x  ;Yeah, we can use stz, but I just need some code to test nice65!
    inx
 bne @again  ; Repeat
