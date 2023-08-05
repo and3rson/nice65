@@ -10,14 +10,14 @@ Features:
 - Makes ugly code less ugly
 - Fixes indentation and letter cases (mnemonics, registers)
 - Understands weird labels, such as colon-less (C64 style) and unnamed (`:`, `:+++`)
-- Support for basic macros
-- Skip files with `; nice65: ignore` comment
+- Preserves indentation of comments
+- Supports basic macros
+- Skips files with `; nice65: ignore` comment
 - Tested with [C64 Kernal/Basic](https://github.com/mist64/c64rom) and [my 6502-based SBC ROM code](https://github.com/and3rson/deck65)
 
-Not implemented yet:
+Improvements to do:
 - Complex macros
 - Proper formatting of arithmetic expressions
-- Better indentation of comments based on deduced context
 
 Notes:
 - Colon-less label mode (`-l`) breaks macros due to [ambiguity of the syntax](https://github.com/cc65/cc65/discussions/2158#discussioncomment-6644905). Use this option only with legacy code that contains no macros (such as C64 source code).
@@ -56,6 +56,10 @@ lda aa
 ldx bb ; load bb
 .endmacro
 
+four .set 9
+var = 1337 + four
+four .set 4
+
 .macro push_all
     phA
     phX
@@ -66,18 +70,21 @@ ldx bb ; load bb
 foo:.byte 1
 
 .code
-         ;        Fill zeropage with zeroes
+;  Fill zeropage with zeroes
 fill:
-push_all
-start: ldax #0, #0
-@again: sta     $00   ,x  ;Yeah, we can use stz, but I just need some code to test nice65!
+   ; save registers
+   push_all
+
+@start: ldax #0, #0
+@again: sta     $00   ,x      ;Yeah, we can use stz, but I just need some code to test nice65!
    inx
 bne @again  ; Repeat
 
-; Do unnecessary throwaway stuff to test expressions
-lda #<($42  +  %10101010- (foo*2))
-cmp foo+2
-jmp :+
+  ; Do unnecessary throwaway stuff to test expressions
+  ;
+  lda #<($42  +  %10101010- (foo*2))
+  cmp foo+2
+  jmp :+
 : lda $1234
 
 @ridiculously_long_label_just_for_the_sake_of_it:PLX
@@ -93,6 +100,10 @@ After:
         LDX bb          ; load bb
 .endmacro
 
+four    .set 9
+var = 1337 + four
+four    .set 4
+
 .macro  push_all
         PHA
         PHX
@@ -105,14 +116,18 @@ foo:    .byte 1
 .code
 ; Fill zeropage with zeroes
 fill:
+        ; save registers
         push_all
-start:  ldax #0, #0
+
+    @start:
+        ldax #0, #0
     @again:
         STA $00, X      ; Yeah, we can use stz, but I just need some code to test nice65!
         INX
         BNE @again      ; Repeat
 
-; Do unnecessary throwaway stuff to test expressions
+        ; Do unnecessary throwaway stuff to test expressions
+        ;
         LDA #<($42+%10101010-(foo*2))
         CMP foo+2
         JMP :+

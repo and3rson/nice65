@@ -40,7 +40,7 @@ CMOS_INSTRUCTIONS = [
     # fmt: on
 ]
 
-COL1_COMMANDS = {'segment', 'zeropage', 'data', 'code', 'bss'}
+# COL1_COMMANDS = {'segment', 'zeropage', 'data', 'code', 'bss', 'include', 'import', 'importzp', 'export', 'exportzp'}
 
 instructions = INSTRUCTIONS + CMOS_INSTRUCTIONS
 
@@ -83,6 +83,12 @@ def main():
         action="store_true",
     )
     parser.add_argument(
+        "-i",
+        "--indent-control-commands",
+        help="Add indents to control commands even if they start at first column",
+        action="store_true",
+    )
+    parser.add_argument(
         "-v",
         "--version",
         help="Show version",
@@ -113,7 +119,7 @@ def main():
         constant_def: LABEL /=|:=/ /[^\n]+/
         numeric_var: IDENT control_command
 
-        comment: ";" SENTENCE?
+        comment: INDENT* ";" SENTENCE?
 
         ?operand: REGISTER | (/#/? /[<>]/? expr)
         ?expr: LITERAL (OP expr)?
@@ -127,6 +133,7 @@ def main():
         IDENT: /[a-zA-Z_][a-zA-Z0-9_]*/
         LABEL_REL: /:[\+\-]+/
         OP: "+" | "-" | "*" | "/" | "|" | "^" | "&"
+        INDENT: /[ ]+/
     """
         # fmt: on
     )
@@ -139,9 +146,16 @@ def main():
                 if fnmatch.fnmatch(file, args.pattern):
                     path = os.path.join(root, file)
                     print("Fixing", path, file=sys.stderr)
-                    fix(grammar, path, None, True, args.colonless_labels)
+                    fix(grammar, path, None, True, args.colonless_labels, args.indent_control_commands)
     else:
-        fix(grammar, args.infile, args.outfile, args.modify_in_place, args.colonless_labels)
+        fix(
+            grammar,
+            args.infile,
+            args.outfile,
+            args.modify_in_place,
+            args.colonless_labels,
+            args.indent_control_commands,
+        )
 
 
 class Version(Action):
@@ -150,7 +164,7 @@ class Version(Action):
         parser.exit()
 
 
-def fix(grammar, infile, outfile, modify_in_place, colonless_labels):
+def fix(grammar, infile, outfile, modify_in_place, colonless_labels, indent_control_commands):
     if infile == "-":
         content = sys.stdin.read()
     else:
@@ -177,12 +191,22 @@ def fix(grammar, infile, outfile, modify_in_place, colonless_labels):
         string = ""
         for i, child in enumerate(line.children):
             if child.data == "comment":
-                sentence = (child.children[0] if child.children else "").strip()
-                s_len = len(string)
-                if '\n' in string:
-                    s_len = s_len - string.rfind('\n') - 1
-                padding = (24 - s_len) if i > 0 else 0
-                string += " " * padding + ("; " + sentence).strip()
+                is_tail = bool(len(string))
+                if is_tail:
+                    sentence = next(iter([x for x in child.children if x.type == "SENTENCE"]), "").strip()
+                    s_len = len(string)
+                    if '\n' in string:
+                        s_len = s_len - string.rfind('\n') - 1
+                    padding = (24 - s_len) if i > 0 else 0
+                    string += " " * padding + ("; " + sentence).strip()
+                else:
+                    sentence = next(iter([x for x in child.children if x.type == "SENTENCE"]), "").strip()
+                    indent = str(next(iter([x for x in child.children if x.type == "INDENT"]), ""))
+                    if indent:
+                        padding = ' ' * 8
+                    else:
+                        padding = ''
+                    string += padding + '; ' + sentence
             elif child.data == "labeldef":
                 if child.children:
                     # Named label definition
@@ -207,13 +231,10 @@ def fix(grammar, infile, outfile, modify_in_place, colonless_labels):
 
                 if statement.data == "control_command":
                     name = statement.children[0].strip()
-                    string += (
-                        (padding if name not in COL1_COMMANDS else '')
-                        + "."
-                        + name.lower()
-                        + " "
-                        + " ".join(statement.children[1:])
-                    )
+                    if not len(string) and not indent_control_commands:
+                        # If this is the first statement in line and indent_control_commands is not set - don't indent
+                        padding = ''
+                    string += padding + "." + name.lower() + " " + " ".join(statement.children[1:])
                 elif statement.data == "macro_start":
                     name = statement.children[0].strip()
                     string += ".macro ".ljust(8, ' ') + name + " " + ", ".join(map(str.strip, statement.children[1:]))
