@@ -97,7 +97,6 @@ def main():
         %import common.NUMBER
         %import common.HEXDIGIT
         %import common.LETTER
-        %import common.WORD
         %import common.WS_INLINE -> _WS
         %ignore _WS
 
@@ -108,9 +107,9 @@ def main():
 
         statement: asm_statement | macro_start | macro_end | control_command | constant_def
         asm_statement: INSTR (_WS+ operand ("," operand)?)?
-        macro_start: ".macro" WORD (WORD ("," WORD)*)?
+        macro_start: ".macro" IDENT (IDENT ("," IDENT)*)?
         macro_end: ".endmacro"
-        control_command: "." WORD (_WS+ /[^\n]+/)?
+        control_command: "." IDENT (_WS+ /[^\n]+/)?
         constant_def: LABEL "=" /[^\n]+/
 
         comment: ";" SENTENCE?
@@ -120,10 +119,11 @@ def main():
             | /\(/ expr /\)/ -> expr
 
         SENTENCE: /[^\n]+/
-        INSTR: """ + (instructions_def if args.colonless_labels else 'WORD') + r"""
+        INSTR: """ + (instructions_def if args.colonless_labels else 'IDENT') + r"""
         REGISTER: "A"i | "X"i | "Y"i
         LITERAL: NUMBER | /\$/ HEXDIGIT+ | /%/ /[01]+/ | LABEL | LABEL_REL | /'.'/ | /\*/
-        LABEL: "@"? (LETTER | "_")+ (LETTER | "_" | NUMBER)*
+        LABEL: "@"? IDENT
+        IDENT: /[a-zA-Z_][a-zA-Z0-9_]*/
         LABEL_REL: /:[\+\-]+/
         OP: "+" | "-" | "*" | "/" | "|" | "^" | "&"
     """
