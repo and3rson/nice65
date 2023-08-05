@@ -64,7 +64,7 @@ definition = (
 
     statement: asm_statement | macro_start | macro_end | control_command | constant_def
     asm_statement: INSTR (_WS+ operand ("," operand)?)?
-    macro_start: ".macro" WORD (_WS+ WORD ("," WORD)*)?
+    macro_start: ".macro" WORD (WORD ("," WORD)*)?
     macro_end: ".endmacro"
     control_command: "." WORD (_WS+ /[^\n]+/)?
     constant_def: LABEL "=" /[^\n]+/

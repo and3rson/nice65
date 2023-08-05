@@ -48,10 +48,9 @@ nice65 ./samples/ -r -p '*.asm'
 
 Before:
 ```asm
-.macro foobar aa, bb, cc
+.macro foobar aa, bb ; do stuff
 lda aa
-ldx bb
-ldy cc
+ldx bb ; load bb
 .endmacro
 
 .data
@@ -83,10 +82,9 @@ end:rts
 
 After:
 ```asm
-.macro  foobar aa, bb, cc
+.macro  foobar aa, bb   ; do stuff
         LDA aa
-        LDX bb
-        LDY cc
+        LDX bb          ; load bb
 .endmacro
 
 .data

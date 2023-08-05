@@ -1,7 +1,6 @@
-.macro foobar aa, bb, cc
+.macro foobar aa, bb ; do stuff
 lda aa
-ldx bb
-ldy cc
+ldx bb ; load bb
 .endmacro
 
 .data
