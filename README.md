@@ -10,7 +10,7 @@ Features:
 - Makes ugly code less ugly
 - Fixes indentation and letter cases (mnemonics, registers)
 - Understands weird labels, such as colon-less (C64 style) and unnamed (`:`, `:+++`)
-- Preserves indentation of comments
+- Preserves indentation level of comments
 - Supports basic macros
 - Skips files with `; nice65: ignore` comment
 - Tested with [C64 Kernal/Basic](https://github.com/mist64/c64rom) and [my 6502-based SBC ROM code](https://github.com/and3rson/deck65)
