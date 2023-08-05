@@ -47,48 +47,6 @@ instructions = INSTRUCTIONS + CMOS_INSTRUCTIONS
 instructions_def = " | ".join(['"' + instr + '"i' for instr in instructions])
 
 
-definition = (
-    # fmt: off
-    r"""
-    %import common.NUMBER
-    %import common.HEXDIGIT
-    %import common.LETTER
-    %import common.WORD
-    %import common.WS_INLINE -> _WS
-    %ignore _WS
-
-    start: line*
-    line: (labeldef statement | statement | labeldef)? comment? "\n"
-
-    labeldef: LABEL ":"? | ":"
-
-    statement: asm_statement | macro_start | macro_end | control_command | constant_def
-    asm_statement: INSTR (_WS+ operand ("," operand)?)?
-    macro_start: ".macro" WORD (WORD ("," WORD)*)?
-    macro_end: ".endmacro"
-    control_command: "." WORD (_WS+ /[^\n]+/)?
-    constant_def: LABEL "=" /[^\n]+/
-
-    comment: ";" SENTENCE?
-
-    ?operand: REGISTER | (/#/? /[<>]/? expr)
-    ?expr: LITERAL (OP expr)?
-        | /\(/ expr /\)/ -> expr
-
-    SENTENCE: /[^\n]+/
-    INSTR: """ + instructions_def + r"""
-    REGISTER: "A"i | "X"i | "Y"i
-    LITERAL: NUMBER | /\$/ HEXDIGIT+ | /%/ /[01]+/ | LABEL | LABEL_REL | /'.'/ | /\*/
-    LABEL: "@"? (LETTER | "_")+ (LETTER | "_" | NUMBER)*
-    LABEL_REL: /:[\+\-]+/
-    OP: "+" | "-" | "*" | "/" | "|" | "^" | "&"
-"""
-    # fmt: on
-)
-
-grammar = Lark(definition)
-
-
 def main():
     parser = ArgumentParser(formatter_class=ArgumentDefaultsHelpFormatter)
     parser.add_argument("infile", help='Input file, pass "-" to read from for stdin')
@@ -119,6 +77,12 @@ def main():
         default='*.s',
     )
     parser.add_argument(
+        "-l",
+        "--colonless-labels",
+        help="Allow labels without a colon (this option breaks macros, use with legacy code only)",
+        action="store_true",
+    )
+    parser.add_argument(
         "-v",
         "--version",
         help="Show version",
@@ -127,15 +91,56 @@ def main():
     )
     args = parser.parse_args()
 
+    definition = (
+        # fmt: off
+        r"""
+        %import common.NUMBER
+        %import common.HEXDIGIT
+        %import common.LETTER
+        %import common.WORD
+        %import common.WS_INLINE -> _WS
+        %ignore _WS
+
+        start: line*
+        line: (labeldef statement | statement | labeldef)? comment? "\n"
+
+        labeldef: LABEL ":" """ + ('?' if args.colonless_labels else '') + r""" | ":"
+
+        statement: asm_statement | macro_start | macro_end | control_command | constant_def
+        asm_statement: INSTR (_WS+ operand ("," operand)?)?
+        macro_start: ".macro" WORD (WORD ("," WORD)*)?
+        macro_end: ".endmacro"
+        control_command: "." WORD (_WS+ /[^\n]+/)?
+        constant_def: LABEL "=" /[^\n]+/
+
+        comment: ";" SENTENCE?
+
+        ?operand: REGISTER | (/#/? /[<>]/? expr)
+        ?expr: LITERAL (OP expr)?
+            | /\(/ expr /\)/ -> expr
+
+        SENTENCE: /[^\n]+/
+        INSTR: """ + (instructions_def if args.colonless_labels else 'WORD') + r"""
+        REGISTER: "A"i | "X"i | "Y"i
+        LITERAL: NUMBER | /\$/ HEXDIGIT+ | /%/ /[01]+/ | LABEL | LABEL_REL | /'.'/ | /\*/
+        LABEL: "@"? (LETTER | "_")+ (LETTER | "_" | NUMBER)*
+        LABEL_REL: /:[\+\-]+/
+        OP: "+" | "-" | "*" | "/" | "|" | "^" | "&"
+    """
+        # fmt: on
+    )
+
+    grammar = Lark(definition)
+
     if args.recursive:
         for root, _, files in os.walk(args.infile):
             for file in files:
                 if fnmatch.fnmatch(file, args.pattern):
                     path = os.path.join(root, file)
                     print("Fixing", path, file=sys.stderr)
-                    fix(path, None, True)
+                    fix(grammar, path, None, True, args.colonless_labels)
     else:
-        fix(args.infile, args.outfile, args.modify_in_place)
+        fix(grammar, args.infile, args.outfile, args.modify_in_place, args.colonless_labels)
 
 
 class Version(Action):
@@ -144,7 +149,7 @@ class Version(Action):
         parser.exit()
 
 
-def fix(infile, outfile, modify_in_place):
+def fix(grammar, infile, outfile, modify_in_place, colonless_labels):
     if infile == "-":
         content = sys.stdin.read()
     else:
@@ -215,7 +220,7 @@ def fix(infile, outfile, modify_in_place):
                     string += ".endmacro"
                 elif statement.data == "asm_statement":
                     mnemonic = statement.children[0]
-                    string += padding + mnemonic.upper()
+                    string += padding + (mnemonic.upper() if mnemonic.lower() in instructions else mnemonic)
                     operands = statement.children[1:]
                     if operands:
                         args = []

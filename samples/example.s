@@ -1,6 +1,12 @@
-.macro foobar aa, bb ; do stuff
+.macro ldax aa, bb ; do stuff
 lda aa
 ldx bb ; load bb
+.endmacro
+
+.macro pushall
+    pha
+    phx
+    phy
 .endmacro
 
 .data
@@ -12,8 +18,8 @@ fill:
 PHa
 Phx
 
-start lDa  #0
-LdX #0
+start: pushall
+ldax #0, #0
 @again: sta     $00   ,x  ;Yeah, we can use stz, but I just need some code to test nice65!
    inx
 bne @again  ; Repeat

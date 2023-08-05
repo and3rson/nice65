@@ -19,6 +19,9 @@ Not implemented yet:
 - Proper formatting of arithmetic expressions
 - Better indentation of comments based on deduced context
 
+Notes:
+- Colon-less label mode (`-l`) breaks macros due to [ambiguity of the syntax](https://github.com/cc65/cc65/discussions/2158#discussioncomment-6644905). Use this option only with legacy code that contains no macros (such as C64 source code).
+
 # Installation
 
 ```sh
@@ -48,9 +51,15 @@ nice65 ./samples/ -r -p '*.asm'
 
 Before:
 ```asm
-.macro foobar aa, bb ; do stuff
+.macro ldax aa, bb ; do stuff
 lda aa
 ldx bb ; load bb
+.endmacro
+
+.macro pushall
+    pha
+    phx
+    phy
 .endmacro
 
 .data
@@ -62,11 +71,11 @@ fill:
 PHa
 Phx
 
-start lDa  #0
-LdX #0
+start: pushall
+ldax #0, #0
 @again: sta     $00   ,x  ;Yeah, we can use stz, but I just need some code to test nice65!
    inx
-bne fill  ; Repeat
+bne @again  ; Repeat
 
 ; Do unnecessary throwaway stuff to test expressions
 lda #<($42  +  %10101010- (foo*2))
@@ -82,9 +91,15 @@ end:rts
 
 After:
 ```asm
-.macro  foobar aa, bb   ; do stuff
+.macro  ldax aa, bb     ; do stuff
         LDA aa
         LDX bb          ; load bb
+.endmacro
+
+.macro  pushall
+        PHA
+        PHX
+        PHY
 .endmacro
 
 .data
@@ -96,12 +111,12 @@ fill:
         PHA
         PHX
 
-start:  LDA #0
-        LDX #0
+start:  pushall
+        ldax #0, #0
     @again:
         STA $00, X      ; Yeah, we can use stz, but I just need some code to test nice65!
         INX
-        BNE fill        ; Repeat
+        BNE @again      ; Repeat
 
 ; Do unnecessary throwaway stuff to test expressions
         LDA #<($42+%10101010-(foo*2))
