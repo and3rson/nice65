@@ -126,7 +126,7 @@ def main():
         LABEL: "@"? IDENT
         IDENT: /[a-zA-Z_][a-zA-Z0-9_]*/
         LABEL_REL: /:[\+\-]+/
-        OP: "+" | "-" | "*" | "/" | "|" | "^" | "&"
+        OP: "+" | "-" | "*" | "/" | "|" | "^" | "&" | ","
         INDENT: /[ ]+/
     """
         # fmt: on
@@ -263,7 +263,13 @@ def fix(grammar, infile, outfile, modify_in_place, colonless_labels):
 def flatten_expr(operand):
     parts = []
     if isinstance(operand, Token):
-        string = str(operand)
+        if operand.type == "OP":
+            if operand.value == ",":
+                string = ", "
+            else:
+                string = f" {operand} "
+        else:
+            string = str(operand)
         if operand.type == 'REGISTER':
             string = string.upper()
         parts.append(string)

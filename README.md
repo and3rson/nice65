@@ -128,8 +128,8 @@ fill:
 
         ; Do unnecessary throwaway stuff to test expressions
         ;
-        LDA #<($42+%10101010-(foo*2))
-        CMP foo+2
+        LDA #<($42 + %10101010 - (foo * 2))
+        CMP foo + 2
         JMP :+
     :   LDA $1234
 
