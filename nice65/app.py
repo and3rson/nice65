@@ -123,7 +123,7 @@ def main():
         INSTR: """ + (instructions_def if args.colonless_labels else 'IDENT') + r"""
         REGISTER: "A"i | "X"i | "Y"i
         LITERAL: NUMBER | /\$/ HEXDIGIT+ | /%/ /[01]+/ | LABEL | LABEL_REL | /'.'/ | /\*/
-        LABEL: "@"? IDENT
+        LABEL: IDENT | "@" /[a-zA-Z0-9_]+/
         IDENT: /[a-zA-Z_][a-zA-Z0-9_]*/
         LABEL_REL: /:[\+\-]+/
         OP: "+" | "-" | "*" | "/" | "|" | "^" | "&" | ","
