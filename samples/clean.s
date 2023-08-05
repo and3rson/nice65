@@ -17,7 +17,7 @@ start:  LDA #0
     @again:
         STA $00, X      ; Yeah, we can use stz, but I just need some code to test nice65!
         INX
-        BNE fill        ; Repeat
+        BNE @again      ; Repeat
 
 ; Do unnecessary throwaway stuff to test expressions
         LDA #<($42+%10101010-(foo*2))
