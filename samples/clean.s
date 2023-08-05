@@ -3,6 +3,10 @@
         LDX bb          ; load bb
 .endmacro
 
+four    .set 9
+var = 1337 + four
+four    .set 4
+
 .macro  push_all
         PHA
         PHX

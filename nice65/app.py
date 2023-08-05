@@ -101,16 +101,17 @@ def main():
         %ignore _WS
 
         start: line*
-        line: (labeldef statement | statement | labeldef)? comment? "\n"
+        line: (labeldef statement | statement | labeldef | numeric_var | constant_def)? comment? "\n"
 
         labeldef: LABEL ":" """ + ('?' if args.colonless_labels else '') + r""" | ":"
 
-        statement: asm_statement | macro_start | macro_end | control_command | constant_def
+        statement: asm_statement | macro_start | macro_end | control_command
         asm_statement: INSTR (_WS+ operand ("," operand)?)?
         macro_start: ".macro" IDENT (IDENT ("," IDENT)*)?
         macro_end: ".endmacro"
         control_command: "." IDENT (_WS+ /[^\n]+/)?
-        constant_def: LABEL "=" /[^\n]+/
+        constant_def: LABEL /=|:=/ /[^\n]+/
+        numeric_var: IDENT control_command
 
         comment: ";" SENTENCE?
 
@@ -227,10 +228,16 @@ def fix(grammar, infile, outfile, modify_in_place, colonless_labels):
                         for operand in operands:
                             args.append(flatten_expr(operand))
                         string += " " + ", ".join(args)
-                elif statement.data == "constant_def":
-                    string += padding + " = ".join(map(str.strip, statement.children))
                 else:
                     raise NotImplementedError("Unknown statement type: " + child.children[0].data)
+            elif child.data == "numeric_var":
+                name, cmd = child.children
+                string = name.strip().ljust(8, ' ') + '.' + ' '.join(map(str.strip, cmd.children))
+            elif child.data == "constant_def":
+                name, assign, value = child.children
+                string += name.strip() + " " + assign.strip() + " " + value.strip()
+            else:
+                raise NotImplementedError("Unknown child in line: " + child.data)
         print(string.rstrip(), file=outfile)
 
     outfile.close()
