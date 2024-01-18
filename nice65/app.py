@@ -83,6 +83,12 @@ def main():
         action="store_true",
     )
     parser.add_argument(
+        "-c",
+        "--lowercase-mnemonics",
+        help="Use lowercase mnemonics",
+        action="store_true",
+    )
+    parser.add_argument(
         "-v",
         "--version",
         help="Show version",
@@ -140,7 +146,7 @@ def main():
                 if fnmatch.fnmatch(file, args.pattern):
                     path = os.path.join(root, file)
                     print("Fixing", path, file=sys.stderr)
-                    fix(grammar, path, None, True, args.colonless_labels)
+                    fix(grammar, path, None, True, args.colonless_labels, args.lowercase_mnemonics)
     else:
         fix(
             grammar,
@@ -148,6 +154,7 @@ def main():
             args.outfile,
             args.modify_in_place,
             args.colonless_labels,
+            args.lowercase_mnemonics,
         )
 
 
@@ -157,7 +164,7 @@ class Version(Action):
         parser.exit()
 
 
-def fix(grammar, infile, outfile, modify_in_place, colonless_labels):
+def fix(grammar, infile, outfile, modify_in_place, colonless_labels, lowercase_mnemonics):
     if infile == "-":
         content = sys.stdin.read()
     else:
@@ -238,7 +245,11 @@ def fix(grammar, infile, outfile, modify_in_place, colonless_labels):
                     string += ".endmacro"
                 elif statement.data == "asm_statement":
                     mnemonic = statement.children[0]
-                    string += padding + (mnemonic.upper() if mnemonic.lower() in instructions else mnemonic)
+                    string += padding + (
+                        (mnemonic.lower() if lowercase_mnemonics else mnemonic.upper())
+                        if mnemonic.lower() in instructions
+                        else mnemonic
+                    )
                     operands = statement.children[1:]
                     if operands:
                         args = []
